@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 
@@ -24,8 +23,6 @@ type Todo struct {
 var collection *mongo.Collection
 
 func main() {
-	fmt.Println("Hello, World!")
-
 	if os.Getenv("ENV") != "production" {
 		err := godotenv.Load(".env")
 		if err != nil {
@@ -48,8 +45,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Connected to MongoDB!")
-
 	collection = client.Database("todo_db").Collection("todos")
 
 	app := fiber.New()
@@ -66,16 +61,11 @@ func main() {
 	app.Patch("/api/todos/:id", updateTodo)
 	app.Delete("/api/todos/:id", deleteTodo)
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "5000"
-	}
-
 	if os.Getenv("ENV") == "production" {
 		app.Static("/", ".client/dist")
 	}
 
-	log.Fatal(app.Listen("0.0.0.0:" + port))
+	log.Fatal(app.Listen("0.0.0.0:" + os.Getenv("PORT")))
 }
 
 func getTodos(c *fiber.Ctx) error {
