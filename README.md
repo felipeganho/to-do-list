@@ -40,6 +40,9 @@ $ npm install
 # Need a Mongo DB string connection
 $ Set MONGODB_URI on .env
 
+# Add alias on your .bashrc
+$ alias air='~/go/bin/air'
+
 # Start backend with Go
 $ air
 
