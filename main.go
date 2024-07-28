@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/felipeganho/to-do-list/pkg/entities"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/joho/godotenv"
@@ -13,12 +14,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
-
-type Todo struct {
-	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	Completed bool               `json:"completed"`
-	Body      string             `json:"body"`
-}
 
 type MongoInstance struct {
 	Client     *mongo.Client
@@ -80,7 +75,7 @@ func main() {
 }
 
 func getTodos(c *fiber.Ctx) error {
-	var todos []Todo
+	var todos []entities.Todo
 
 	cursor, err := mg.Collection.Find(context.Background(), bson.M{})
 	if err != nil {
@@ -90,7 +85,7 @@ func getTodos(c *fiber.Ctx) error {
 	defer cursor.Close(context.Background())
 
 	for cursor.Next(context.Background()) {
-		var todo Todo
+		var todo entities.Todo
 		if err := cursor.Decode(&todo); err != nil {
 			return err
 		}
@@ -101,7 +96,7 @@ func getTodos(c *fiber.Ctx) error {
 }
 
 func createTodo(c *fiber.Ctx) error {
-	todo := new(Todo)
+	todo := new(entities.Todo)
 
 	if err := c.BodyParser(todo); err != nil {
 		return err
