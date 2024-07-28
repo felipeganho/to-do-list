@@ -41,6 +41,12 @@ func Connect() error {
 	return nil
 }
 
+func Disconnect() {
+	if err := mg.Client.Disconnect(context.Background()); err != nil {
+		log.Fatal(err)
+	}
+}
+
 func main() {
 	if os.Getenv("ENV") != "production" {
 		err := godotenv.Load(".env")
@@ -52,6 +58,8 @@ func main() {
 	if err := Connect(); err != nil {
 		log.Fatal(err)
 	}
+
+	defer Disconnect()
 
 	app := fiber.New()
 
