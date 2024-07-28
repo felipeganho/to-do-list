@@ -20,7 +20,31 @@ type Todo struct {
 	Body      string             `json:"body"`
 }
 
-var collection *mongo.Collection
+type MongoInstance struct {
+	Client     *mongo.Client
+	Collection *mongo.Collection
+}
+
+var mg MongoInstance
+
+func Connect() error {
+	MONGODB_URI := os.Getenv("MONGODB_URI")
+	clientOptions := options.Client().ApplyURI(MONGODB_URI)
+	client, err := mongo.Connect(context.Background(), clientOptions)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	collection := client.Database("todo_db").Collection("todos")
+
+	mg = MongoInstance{
+		Client:     client,
+		Collection: collection,
+	}
+
+	return nil
+}
 
 func main() {
 	if os.Getenv("ENV") != "production" {
@@ -30,22 +54,9 @@ func main() {
 		}
 	}
 
-	MONGODB_URI := os.Getenv("MONGODB_URI")
-	clientOptions := options.Client().ApplyURI(MONGODB_URI)
-	client, err := mongo.Connect(context.Background(), clientOptions)
-
-	if err != nil {
+	if err := Connect(); err != nil {
 		log.Fatal(err)
 	}
-
-	defer client.Disconnect(context.Background())
-
-	err = client.Ping(context.Background(), nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	collection = client.Database("todo_db").Collection("todos")
 
 	app := fiber.New()
 
@@ -71,7 +82,7 @@ func main() {
 func getTodos(c *fiber.Ctx) error {
 	var todos []Todo
 
-	cursor, err := collection.Find(context.Background(), bson.M{})
+	cursor, err := mg.Collection.Find(context.Background(), bson.M{})
 	if err != nil {
 		return err
 	}
@@ -100,7 +111,7 @@ func createTodo(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Body is required"})
 	}
 
-	insertResult, err := collection.InsertOne(context.Background(), todo)
+	insertResult, err := mg.Collection.InsertOne(context.Background(), todo)
 	if err != nil {
 		return err
 	}
@@ -121,7 +132,7 @@ func updateTodo(c *fiber.Ctx) error {
 	filter := bson.M{"_id": objectID}
 	update := bson.M{"$set": bson.M{"completed": true}}
 
-	_, err = collection.UpdateOne(context.Background(), filter, update)
+	_, err = mg.Collection.UpdateOne(context.Background(), filter, update)
 	if err != nil {
 		return err
 	}
@@ -139,7 +150,7 @@ func deleteTodo(c *fiber.Ctx) error {
 
 	filter := bson.M{"_id": objectID}
 
-	_, err = collection.DeleteOne(context.Background(), filter)
+	_, err = mg.Collection.DeleteOne(context.Background(), filter)
 	if err != nil {
 		return err
 	}
