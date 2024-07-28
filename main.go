@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/felipeganho/to-do-list/pkg/entities"
+	"github.com/felipeganho/to-do-list/pkg/presenter"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/joho/godotenv"
@@ -100,7 +101,7 @@ func getTodos(c *fiber.Ctx) error {
 		todos = append(todos, todo)
 	}
 
-	return c.JSON(todos)
+	return c.JSON(presenter.TodoSuccessResponse(todos))
 }
 
 func createTodo(c *fiber.Ctx) error {
